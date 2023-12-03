@@ -97,18 +97,234 @@
 
 const person = {
 	name: 'Max',
-	age : 23
-}
+	age: 23,
+};
 
-const copiedPerson = {...person}
-const copiedPerson1 = person
+// const copiedPerson = {...person}
+// const copiedPerson1 = person
 
-person.age = 89
+// person.age = 89
 
-console.log(copiedPerson) // 23 
-console.log(copiedPerson1)// 89
+// console.log(copiedPerson) // 23
+// console.log(copiedPerson1)// 89
 
 // for (const key in person) {
-// 	console.log(person) //ключі
+// 	console.log(key) //ключі
 // 	console.log(person[key]) // значення
 // }
+
+/////////////////////////////////////////////////////////////////
+//INTERSECTIONS
+//1
+
+type Combinable = number | string;
+type Str = string | boolean;
+type Universal = Combinable & Str; // string // те що у них спільне
+
+//2
+// type Admin = {
+// 	name: string;
+// 	privileges: string[];
+// };
+
+// type Employee = {
+// 	name: string;
+// 	startDate: Date;
+// };
+
+// type ElevatedEmployee = Admin & Employee;
+
+// const el1: ElevatedEmployee = {
+// 	name: 'Ira',
+// 	privileges: ['1', '2'],
+// 	startDate: new Date(),
+// };
+
+//3
+//Interface
+interface Admin1 {
+	name: string;
+	privileges: string[];
+}
+
+interface Employee1 {
+	name: string;
+	startDate: Date;
+}
+
+interface ElevatedEmployee1 extends Admin1, Employee1 {}
+
+const el2: ElevatedEmployee1 = {
+	name: 'Ira',
+	privileges: ['1', '2'],
+	startDate: new Date(),
+};
+
+//
+// Guards //typeof
+//
+
+// function add(a: Combinable, b: Combinable) {
+// 	if (typeof a === 'string' || typeof b === 'string') {
+// 		return a.toString() + b.toString();
+// 	}
+// 	return a + b;
+// }
+
+//
+//Function Overloads
+//
+
+// console.log(add(5, '78'));
+const result1 = add(7, 5);
+// const result2 = add('qwe','rty')
+
+//
+// result2.split('') //помилка бо тип Combinable/
+//
+const result2 = add('qwe', 'rty') as string;
+result2.split(''); //помилка бо тип Combinable/
+console.log(result2.split(',')); //works
+//
+function add(a: number, b: number): number;
+function add(a: string, b: string): string;
+function add(a: Combinable, b: Combinable) {
+	if (typeof a === 'string' || typeof b === 'string') {
+		return a.toString() + b.toString();
+	}
+	return a + b;
+}
+
+const result3 = add('rfgty', 'fghyu');
+result3.toUpperCase();
+console.log(result3.toUpperCase());
+
+//
+////Optional Chaining operator ? =>  перевірка на undefined
+//
+
+//
+////Optional Chaining operator ?? перевірка на null і undefined
+//
+
+const fetchUserData = {
+	id: 'user1',
+	name: 'Max',
+	job: { title: 'CEO', description: 'My oun company' },
+};
+
+console.log(fetchUserData?.job?.title)
+
+///
+//Guards // in
+//
+
+type Admin = {
+	name: string;
+	privileges: string[];
+};
+
+type Employee = {
+	name: string;
+	startDate: Date;
+};
+
+type UnknownEmployee = Admin | Employee;
+
+function printEmploeeInfo(empl: UnknownEmployee) {
+	console.log('Name' + ' ' + empl.name);
+	// console.log('Privilegs' + ' ' + empl.privileges) // privileges does not exist in UnknownEmployee
+	if ('privileges' in empl) {
+		console.log('Privileges' + ' ' + empl.privileges);
+	}
+	if ('startDate' in empl) {
+		console.log('startDate' + ' ' + empl.startDate);
+	}
+}
+
+printEmploeeInfo(el2); // it works
+printEmploeeInfo({ name: 'Name', privileges: ['7'] }); // it wotks
+
+//
+//Guards //instance of
+//
+
+class Car {
+	drive() {
+		console.log('Driving.....');
+	}
+}
+
+class Truck {
+	drive() {
+		console.log('Driving a truck.....');
+	}
+	loadCargo(amount: number) {
+		console.log('loading cargo....' + amount);
+	}
+}
+
+type Vehicle = Car | Truck;
+
+const v1 = new Car();
+const v2 = new Truck();
+
+function useVehicle(vehicle: Vehicle) {
+	vehicle.drive();
+	if (vehicle instanceof Truck) {
+		vehicle.loadCargo(7);
+	}
+}
+
+useVehicle(v2);
+
+//
+//Discriminated Unions
+//
+
+interface Bird {
+	type: 'bird'; //literal value
+	flyingspeed: number;
+}
+
+interface Horse {
+	type: 'horse';
+	runningSpeed: number;
+}
+
+type Animal = Bird | Horse;
+
+function moveAnimal(animal: Animal) {
+	// console.log('The speed is....' + animal.)/
+	switch (animal.type) {
+		case 'bird':
+			console.log('The bird`s speed is....' + animal.flyingspeed);
+
+			break;
+		case 'horse':
+			console.log('The horse`s speed is....' + animal.runningSpeed);
+	}
+}
+moveAnimal({ type: 'bird', flyingspeed: 87 });
+moveAnimal({ type: 'horse', runningSpeed: 89 });
+
+//
+//Type Casting
+//
+const paragraph = document.getElementById('paragraph_id');
+// const input = <HTMLInputElement>document.getElementById('user-input')!; //works
+const input = document.getElementById('user-input')! as HTMLInputElement; //works alternative
+input.value = 'Hi there!';
+
+//
+//Index Properties
+//
+interface ErrorContainer {
+	// {email :'not a valid email', userName:'must start with a character'}
+	[prop: string]: string;
+}
+
+const errorBag: ErrorContainer = {
+	email: 'not a valid email',
+	userName: 'must start with a capital character',
+};
