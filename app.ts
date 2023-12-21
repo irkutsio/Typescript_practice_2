@@ -1,68 +1,108 @@
-// interface Person {
-// 	name: string;
-// 	age: number;
-// 	greet(phrase: string): void;
-// }
+// DECORATORS
 
-// let user1: Person;
-
-// user1 = {
-// 	name: 'Ira',
-// 	age: 34,
-// 	greet(phrase) {
-// 		console.log(this.name + ` ${phrase}`);
-// 	},
-// };
-
-// user1.greet('Hello!');
-
-///////////////////////////
-/////////////
-//////////////////////////
-
-// type addFn = (n1: number, n2: number) => number;
-interface addFn {
-	//instead of ⬆
-	(n1: number, n2: number): number;
+//class decorator
+function Logger(logStr: string) {
+	console.log('LOGGER FACTORY');
+	return function (constructor: Function) {
+		console.log(logStr);
+		console.log(constructor);
+	};
 }
 
-let add: addFn;
-
-add = (n1: number, n2: number) => {
-	return n1 + n2;
-};
-
-interface Named {
-	readonly name?: string;
-	outputName?: string; //optional
+function WithTemplate(template: string, hookId: string) {
+	console.log('TEMPLATE FACTORY');
+	// return function (_: Function) { //if don`t need constructor
+	return function <T extends { new (...args: any[]): {name:string} }>(originalConstructor: T) {
+		return class extends originalConstructor {
+			constructor(...args: any[]) {
+				super();
+				console.log('rendering template');
+				const hookEl = document.getElementById(hookId);
+				if (hookEl) {
+					hookEl.innerHTML = template;
+					hookEl.querySelector('h1')!.textContent = this.name;
+				}
+			}
+		};
+	};
 }
 
-interface Greetable extends Named {
-	//forced us to have name from Named AND greet from Greetable
-	greet(phrase: string): void;
+// @Logger('logging person')
+@WithTemplate('<h1>My Person Title</h1>', 'app')
+class Person {
+	name = 'Max';
+
+	constructor() {
+		console.log(' Creating new person...');
+	}
 }
 
-class Person implements Greetable {
-	name?: string;
-	age = 89; //можна додавати екстра properties
+const person = new Person();
+console.log(person);
 
-	// constructor(n: string = 'IRA') { //same ⬇
-	constructor(n?: string) {
-		if (n) {
-			this.name = n;
+//// ---
+
+//// ---
+
+//// ---
+
+// property decorator
+function Log(target: any, propertyName: string | Symbol) {
+	console.log('Property decorator');
+	console.log(target, propertyName);
+}
+
+// Accesors decorator
+///////-------prototype
+function Log2(target: any, name: string, descriptor: PropertyDescriptor) {
+	console.log('Accesors decorator');
+	console.log(target);
+	console.log(name);
+	console.log(descriptor);
+	
+}
+
+//method decorator
+function Log3(target: any, name: string | Symbol, descriptor: PropertyDescriptor) {
+	console.log('Method decorator');
+	console.log(target);
+	console.log(name);
+	console.log(descriptor);
+}
+
+//parameter decorator
+// -----------------------------------------------position of argument
+function Log4(target: any, name: string | Symbol, position: number) {
+	console.log('Parameter decorator');
+	console.log(target);
+	console.log(name);
+	console.log(position);
+}
+
+class Product {
+	// @Log // property decorator
+	title: string;
+	private _price: number;
+
+	// @Log2
+	set price(value: number) {
+		if (value > 0) {
+			this._price = value;
 		} else {
-			this.name = ' noName';
+			throw new Error('value must be greater then 0');
 		}
 	}
 
-	greet(phrase: string) {
-		console.log(` ${phrase} ${this.name}`);
+	constructor(t: string, p: number) {
+		this.title = t;
+		this._price = p;
+	}
+
+	@Log3
+	getPriceWithTax(@Log4 tax: number) {
+		return this._price * (1 + tax);
 	}
 }
 
-let user1: Greetable;
-// user1 = new Person('Ira');
-user1 = new Person();
-
-user1.greet('Hi there,');
-console.log(user1);
+const p1 = new Product('Book', 19);
+const p2 = new Product('Book 2', 29);
